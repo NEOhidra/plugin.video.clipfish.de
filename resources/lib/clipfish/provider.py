@@ -1,3 +1,4 @@
+from resources.lib.kodion import iso8601
 from resources.lib.kodion.utils import FunctionCache
 
 __author__ = 'bromix'
@@ -43,9 +44,22 @@ class Provider(kodion.AbstractProvider):
             video_item.set_fanart(self.get_fanart(context))
             video_item.set_plot(video['description'])
             video_item.set_duration_from_seconds(int(video['media_length']))
+            date = iso8601.parse(video['pubDate'])
+            video_item.set_year(date.year)
+            video_item.set_aired(date.year, date.month, date.day)
+            video_item.set_date(date.year, date.month, date.day, date.hour, date.minute, date.second)
             video_item.set_studio('clipfish.de')
             video_item.add_artist('clipfish.de')
             result.append(video_item)
+            pass
+
+        list_page_limit = int(json_data.get('list_page_limit', '16'))
+        total_num_videos = int(json_data.get('total_num_videos', '0'))
+        page = int(context.get_param('page', '1'))
+        if page*list_page_limit < total_num_videos:
+            next_page_item = kodion.items.NextPageItem(context, page)
+            next_page_item.set_fanart(self.get_fanart(context))
+            result.append(next_page_item)
             pass
 
         return result
@@ -63,14 +77,14 @@ class Provider(kodion.AbstractProvider):
         # root of show
         if page == 1 and category == 'mostrecent':
             # highestrated
-            highestrated_item = DirectoryItem(context.localize(self._local_map['clipfish.highestrated']),
+            highestrated_item = DirectoryItem('[B]'+context.localize(self._local_map['clipfish.highestrated'])+'[/B]',
                                               context.create_uri(['show', show_id],
                                                                  {'page': page, 'category': 'highestrated'}))
             highestrated_item.set_fanart(self.get_fanart(context))
             result.append(highestrated_item)
 
             # mostviewed
-            mostviewed_item = DirectoryItem(context.localize(self._local_map['clipfish.mostviewed']),
+            mostviewed_item = DirectoryItem('[B]'+context.localize(self._local_map['clipfish.mostviewed'])+'[/B]',
                                             context.create_uri(['show', show_id],
                                                                {'page': page, 'category': 'mostviewed'}))
             mostviewed_item.set_fanart(self.get_fanart(context))
@@ -97,7 +111,7 @@ class Provider(kodion.AbstractProvider):
             if category['id'] == category_id:
                 specials = category['specials']
                 for show in specials:
-                    show_item = DirectoryItem(show['title'], context.create_uri(['show', show['id']]),
+                    show_item = DirectoryItem(show['title'], context.create_uri(['show', str(show['id'])]),
                                               image=show['img_topbanner_ipad'])
                     show_item.set_fanart(self.get_fanart(context))
                     result.append(show_item)
