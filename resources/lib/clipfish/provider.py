@@ -35,15 +35,19 @@ class Provider(kodion.AbstractProvider):
         return context.create_resource_path('media', 'fanart.jpg')
 
     def get_wizard_supported_views(self):
-        return ['default', 'episodes', 'tvshows']
+        return ['default', 'episodes', 'tvshows', 'movies']
 
-    def _do_videos(self, context, json_data):
+    def _do_videos(self, context, json_data, content_type='episodes'):
         result = []
 
         videos = json_data.get('videos', [])
         for video in videos:
-            video_item = VideoItem(video['title'], video['video_url_wifi_quality'],
-                                   image=video['media_content_thumbnail_large'])
+            video_item = VideoItem(video['title'], video['video_url_wifi_quality'])
+            image = video.get('media_content_thumbnail_large', '')
+            if content_type == 'movies':
+                image = video.get('poster', '')
+                pass
+            video_item.set_image(image)
             video_item.set_fanart(self.get_fanart(context))
             video_item.set_plot(video['description'])
             video_item.set_duration_from_seconds(int(video['media_length']))
@@ -67,11 +71,12 @@ class Provider(kodion.AbstractProvider):
 
         return result
 
-    def _do_shows(self, context, json_data):
+    def _do_shows(self, context, json_data, content_type='episodes'):
         result = []
 
         for show in json_data:
-            show_item = DirectoryItem(show['title'], context.create_uri(['show', str(show['id'])]),
+            show_item = DirectoryItem(show['title'],
+                                      context.create_uri(['show', str(show['id'])], {'type': content_type}),
                                       image=show['img_topbanner_ipad'])
             show_item.set_fanart(self.get_fanart(context))
 
@@ -87,7 +92,13 @@ class Provider(kodion.AbstractProvider):
 
     @kodion.RegisterProviderPath('^/show/(?P<show_id>\d+)/$')
     def _on_show(self, context, re_match):
-        context.set_content_type(kodion.constants.content_type.EPISODES)
+        content_type = context.get_param('type', 'episodes')
+        if content_type == 'movies':
+            context.set_content_type(kodion.constants.content_type.MOVIES)
+            pass
+        else:
+            context.set_content_type(kodion.constants.content_type.EPISODES)
+            pass
 
         result = []
 
@@ -98,18 +109,22 @@ class Provider(kodion.AbstractProvider):
         # root of show
         if page == 1 and category == 'mostrecent':
             # highestrated
+            new_params = {}
+            new_params.update(context.get_params())
+            new_params['category'] = 'highestrated'
             highestrated_item = DirectoryItem(
                 '[B]' + context.localize(self._local_map['clipfish.highestrated']) + '[/B]',
-                context.create_uri(['show', show_id],
-                                   {'page': page, 'category': 'highestrated'}))
+                context.create_uri(context.get_path(), new_params))
             highestrated_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             highestrated_item.set_fanart(self.get_fanart(context))
             result.append(highestrated_item)
 
             # mostviewed
+            new_params = {}
+            new_params.update(context.get_params())
+            new_params['category'] = 'mostviewed'
             mostviewed_item = DirectoryItem('[B]' + context.localize(self._local_map['clipfish.mostviewed']) + '[/B]',
-                                            context.create_uri(['show', show_id],
-                                                               {'page': page, 'category': 'mostviewed'}))
+                                            context.create_uri(context.get_path(), new_params))
             mostviewed_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             mostviewed_item.set_fanart(self.get_fanart(context))
             result.append(mostviewed_item)
@@ -117,13 +132,18 @@ class Provider(kodion.AbstractProvider):
 
         client = self.get_client(context)
         json_data = client.get_videos_of_show(show_id=show_id, category=category, page=page)
-        result.extend(self._do_videos(context, json_data))
+        result.extend(self._do_videos(context, json_data, content_type))
 
         return result
 
     @kodion.RegisterProviderPath('^/category/(?P<category_id>\d+)/$')
     def _on_category(self, context, re_match):
-        context.set_content_type(kodion.constants.content_type.TV_SHOWS)
+        category_id = re_match.group('category_id')
+
+        # we skip movies with the content type
+        if category_id != '19':
+            context.set_content_type(kodion.constants.content_type.TV_SHOWS)
+            pass
         context.add_sort_method(kodion.constants.sort_method.LABEL)
 
         result = []
@@ -134,7 +154,11 @@ class Provider(kodion.AbstractProvider):
         for category in json_data:
             if category['id'] == category_id:
                 specials = category['specials']
-                result.extend(self._do_shows(context, specials))
+                content_type = 'episodes'
+                if category_id == '19':
+                    content_type = 'movies'
+                    pass
+                result.extend(self._do_shows(context, specials, content_type))
                 break
             pass
 
@@ -227,7 +251,7 @@ class Provider(kodion.AbstractProvider):
             new_params.update(context.get_params())
             new_params['category'] = 'mostviewed'
             mostviewed_item = DirectoryItem('[B]' + context.localize(self._local_map['clipfish.mostviewed']) + '[/B]',
-                                            context.create_uri(context.get_path(),new_params))
+                                            context.create_uri(context.get_path(), new_params))
             mostviewed_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             mostviewed_item.set_fanart(self.get_fanart(context))
             result.append(mostviewed_item)
