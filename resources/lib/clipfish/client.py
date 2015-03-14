@@ -22,6 +22,15 @@ class Client():
         url = 'http://www.clipfish.de/devmobileapp/topvideos/%s/%d/%d' % (category, page, self._items_per_page)
         return self._perform_request(url)
 
+    def search(self, query, category='mostrecent', page=1):
+        if not category in ['mostrecent', 'highestrated', 'mostviewed']:
+            category = 'mostrecent'
+            pass
+
+        url = 'http://www.clipfish.de/devmobileapp/searchvideos/%s/%s/%d/%s' % (
+            query, category, page, self._items_per_page)
+        return self._perform_request(url)
+
     def get_videos_of_show(self, show_id, category='mostrecent', page=1):
         if not category in ['mostrecent', 'highestrated', 'mostviewed']:
             category = 'mostrecent'

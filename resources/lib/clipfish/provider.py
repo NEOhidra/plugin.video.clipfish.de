@@ -193,8 +193,49 @@ class Provider(kodion.AbstractProvider):
 
         return result
 
+    def on_search(self, search_text, context, re_match):
+        context.set_content_type(kodion.constants.content_type.EPISODES)
+
+        result = []
+
+        category = context.get_param('category', 'mostrecent')
+        page = int(context.get_param('page', '1'))
+
+        # root of show
+        if page == 1 and category == 'mostrecent':
+            # highestrated
+            new_params = {}
+            new_params.update(context.get_params())
+            new_params['category'] = 'highestrated'
+            highestrated_item = DirectoryItem(
+                '[B]' + context.localize(self._local_map['clipfish.highestrated']) + '[/B]',
+                context.create_uri(context.get_path(), new_params))
+            highestrated_item.set_fanart(self.get_fanart(context))
+            result.append(highestrated_item)
+
+            # mostviewed
+            new_params = {}
+            new_params.update(context.get_params())
+            new_params['category'] = 'mostviewed'
+            mostviewed_item = DirectoryItem('[B]' + context.localize(self._local_map['clipfish.mostviewed']) + '[/B]',
+                                            context.create_uri(context.get_path(),new_params))
+            mostviewed_item.set_fanart(self.get_fanart(context))
+            result.append(mostviewed_item)
+            pass
+
+        client = self.get_client(context)
+        json_data = client.search(search_text, category=category, page=page)
+        result.extend(self._do_videos(context, json_data))
+
+        return result
+
     def on_root(self, context, re_match):
         result = []
+
+        # search
+        search_item = kodion.items.SearchItem(context, image=context.create_resource_path('media', 'search.png'),
+                                              fanart=self.get_fanart(context))
+        result.append(search_item)
 
         # highlights
         highlights_item = DirectoryItem(context.localize(self._local_map['clipfish.highlights']),
