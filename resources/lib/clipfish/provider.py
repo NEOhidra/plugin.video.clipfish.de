@@ -74,6 +74,12 @@ class Provider(kodion.AbstractProvider):
             show_item = DirectoryItem(show['title'], context.create_uri(['show', str(show['id'])]),
                                       image=show['img_topbanner_ipad'])
             show_item.set_fanart(self.get_fanart(context))
+
+            context_menu = [(context.localize(kodion.constants.localize.FAVORITES_ADD),
+                             'RunPlugin(%s)' % context.create_uri([kodion.constants.paths.FAVORITES, 'add'],
+                                                                  {'item': kodion.items.to_jsons(show_item)}))]
+            show_item.set_context_menu(context_menu)
+
             result.append(show_item)
             pass
 
@@ -229,20 +235,21 @@ class Provider(kodion.AbstractProvider):
 
         return result
 
+    def _internal_favorite(self, context, re_match):
+        context.set_content_type(kodion.constants.content_type.TV_SHOWS)
+        return kodion.AbstractProvider._internal_favorite(self, context, re_match)
+
     def on_root(self, context, re_match):
         result = []
 
-        # search
-        search_item = kodion.items.SearchItem(context, image=context.create_resource_path('media', 'search.png'),
-                                              fanart=self.get_fanart(context))
-        result.append(search_item)
-
-        # highlights
-        highlights_item = DirectoryItem(context.localize(self._local_map['clipfish.highlights']),
-                                        context.create_uri(['highlights']),
-                                        image=context.create_resource_path('media', 'clipfish.png'))
-        highlights_item.set_fanart(self.get_fanart(context))
-        result.append(highlights_item)
+        # favorites and latest videos
+        if len(context.get_favorite_list().list()) > 0:
+            fav_item = DirectoryItem('[B]' + context.localize(kodion.constants.localize.FAVORITES) + '[/B]',
+                                     context.create_uri([kodion.constants.paths.FAVORITES, 'list']),
+                                     image=context.create_resource_path('media', 'highlight.png'))
+            fav_item.set_fanart(self.get_fanart(context))
+            result.append(fav_item)
+            pass
 
         # categories
         categories_item = DirectoryItem(context.localize(self._local_map['clipfish.categories']),
@@ -251,12 +258,24 @@ class Provider(kodion.AbstractProvider):
         categories_item.set_fanart(self.get_fanart(context))
         result.append(categories_item)
 
+        # highlights
+        highlights_item = DirectoryItem(context.localize(self._local_map['clipfish.highlights']),
+                                        context.create_uri(['highlights']),
+                                        image=context.create_resource_path('media', 'clipfish.png'))
+        highlights_item.set_fanart(self.get_fanart(context))
+        result.append(highlights_item)
+
         # all videos
         all_videos_item = DirectoryItem(context.localize(self._local_map['clipfish.all-videos']),
                                         context.create_uri(['all-videos']),
                                         image=context.create_resource_path('media', 'clipfish.png'))
         all_videos_item.set_fanart(self.get_fanart(context))
         result.append(all_videos_item)
+
+        # search
+        search_item = kodion.items.SearchItem(context, image=context.create_resource_path('media', 'search.png'),
+                                              fanart=self.get_fanart(context))
+        result.append(search_item)
 
         return result
 
