@@ -5,10 +5,20 @@ from resources.lib.kodion import simple_requests as requests
 
 class Client():
     def __init__(self):
+        self._items_per_page = 16
         pass
 
     def get_categories(self):
         return self._perform_request(url='http://www.clipfish.de/devmobileapp/metachannels')
+
+    def get_videos_of_show(self, show_id, category='mostrecent', page=1):
+        if not category in ['mostrecent', 'highestrated', 'mostviewed']:
+            category = 'mostrecent'
+            pass
+
+        url = 'http://www.clipfish.de/devmobileapp/specialvideos/%s/%s/%d/%d' % (
+            show_id, category, page, self._items_per_page)
+        return self._perform_request(url)
 
     def _perform_request(self, url, method='GET', headers=None, post_data=None, params=None, allow_redirects=True):
         # params
