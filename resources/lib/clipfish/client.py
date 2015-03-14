@@ -11,6 +11,9 @@ class Client():
     def get_categories(self):
         return self._perform_request(url='http://www.clipfish.de/devmobileapp/metachannels')
 
+    def get_highlights(self):
+        return self._perform_request(url='http://www.clipfish.de/devmobileapp/specials/highlights')
+
     def get_videos_of_show(self, show_id, category='mostrecent', page=1):
         if not category in ['mostrecent', 'highestrated', 'mostviewed']:
             category = 'mostrecent'

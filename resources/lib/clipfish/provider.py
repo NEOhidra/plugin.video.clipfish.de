@@ -15,7 +15,8 @@ class Provider(kodion.AbstractProvider):
         self._client = None
         self._local_map.update({'clipfish.categories': 30500,
                                 'clipfish.highestrated': 30501,
-                                'clipfish.mostviewed': 30502})
+                                'clipfish.mostviewed': 30502,
+                                'clipfish.highlights': 30503})
         pass
 
     def get_client(self, context):
@@ -60,6 +61,18 @@ class Provider(kodion.AbstractProvider):
             next_page_item = kodion.items.NextPageItem(context, page)
             next_page_item.set_fanart(self.get_fanart(context))
             result.append(next_page_item)
+            pass
+
+        return result
+
+    def _do_shows(self, context, json_data):
+        result = []
+
+        for show in json_data:
+            show_item = DirectoryItem(show['title'], context.create_uri(['show', str(show['id'])]),
+                                      image=show['img_topbanner_ipad'])
+            show_item.set_fanart(self.get_fanart(context))
+            result.append(show_item)
             pass
 
         return result
@@ -110,12 +123,7 @@ class Provider(kodion.AbstractProvider):
         for category in json_data:
             if category['id'] == category_id:
                 specials = category['specials']
-                for show in specials:
-                    show_item = DirectoryItem(show['title'], context.create_uri(['show', str(show['id'])]),
-                                              image=show['img_topbanner_ipad'])
-                    show_item.set_fanart(self.get_fanart(context))
-                    result.append(show_item)
-                    pass
+                result.extend(self._do_shows(context, specials))
                 break
             pass
 
@@ -137,10 +145,22 @@ class Provider(kodion.AbstractProvider):
 
         return result
 
+    @kodion.RegisterProviderPath('^/highlights/$')
+    def _on_highlights(self, context, re_match):
+        context.set_content_type(kodion.constants.content_type.TV_SHOWS)
+
+        client = self.get_client(context)
+        return self._do_shows(context, client.get_highlights())
+
     def on_root(self, context, re_match):
         result = []
 
         # highlights
+        highlights_item = DirectoryItem(context.localize(self._local_map['clipfish.highlights']),
+                                        context.create_uri(['highlights']),
+                                        image=context.create_resource_path('media', 'clipfish.png'))
+        highlights_item.set_fanart(self.get_fanart(context))
+        result.append(highlights_item)
 
         # categories
         categories_item = DirectoryItem(context.localize(self._local_map['clipfish.categories']),
