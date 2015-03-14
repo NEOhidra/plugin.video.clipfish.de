@@ -102,6 +102,7 @@ class Provider(kodion.AbstractProvider):
                 '[B]' + context.localize(self._local_map['clipfish.highestrated']) + '[/B]',
                 context.create_uri(['show', show_id],
                                    {'page': page, 'category': 'highestrated'}))
+            highestrated_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             highestrated_item.set_fanart(self.get_fanart(context))
             result.append(highestrated_item)
 
@@ -109,6 +110,7 @@ class Provider(kodion.AbstractProvider):
             mostviewed_item = DirectoryItem('[B]' + context.localize(self._local_map['clipfish.mostviewed']) + '[/B]',
                                             context.create_uri(['show', show_id],
                                                                {'page': page, 'category': 'mostviewed'}))
+            mostviewed_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             mostviewed_item.set_fanart(self.get_fanart(context))
             result.append(mostviewed_item)
             pass
@@ -147,7 +149,7 @@ class Provider(kodion.AbstractProvider):
         for category in json_data:
             title = category['title']
             category_item = DirectoryItem(title, context.create_uri(['category', category['id']]),
-                                          image=context.create_resource_path('media', 'clipfish.png'))
+                                          image=context.create_resource_path('media', 'categories.png'))
             category_item.set_fanart(self.get_fanart(context))
             result.append(category_item)
             pass
@@ -216,6 +218,7 @@ class Provider(kodion.AbstractProvider):
             highestrated_item = DirectoryItem(
                 '[B]' + context.localize(self._local_map['clipfish.highestrated']) + '[/B]',
                 context.create_uri(context.get_path(), new_params))
+            highestrated_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             highestrated_item.set_fanart(self.get_fanart(context))
             result.append(highestrated_item)
 
@@ -225,6 +228,7 @@ class Provider(kodion.AbstractProvider):
             new_params['category'] = 'mostviewed'
             mostviewed_item = DirectoryItem('[B]' + context.localize(self._local_map['clipfish.mostviewed']) + '[/B]',
                                             context.create_uri(context.get_path(),new_params))
+            mostviewed_item.set_image(context.create_resource_path('media', 'clipfish.png'))
             mostviewed_item.set_fanart(self.get_fanart(context))
             result.append(mostviewed_item)
             pass
@@ -246,7 +250,7 @@ class Provider(kodion.AbstractProvider):
         if len(context.get_favorite_list().list()) > 0:
             fav_item = DirectoryItem('[B]' + context.localize(kodion.constants.localize.FAVORITES) + '[/B]',
                                      context.create_uri([kodion.constants.paths.FAVORITES, 'list']),
-                                     image=context.create_resource_path('media', 'highlight.png'))
+                                     image=context.create_resource_path('media', 'favorites.png'))
             fav_item.set_fanart(self.get_fanart(context))
             result.append(fav_item)
             pass
@@ -254,21 +258,21 @@ class Provider(kodion.AbstractProvider):
         # categories
         categories_item = DirectoryItem(context.localize(self._local_map['clipfish.categories']),
                                         context.create_uri(['categories']),
-                                        image=context.create_resource_path('media', 'clipfish.png'))
+                                        image=context.create_resource_path('media', 'categories.png'))
         categories_item.set_fanart(self.get_fanart(context))
         result.append(categories_item)
 
         # highlights
         highlights_item = DirectoryItem(context.localize(self._local_map['clipfish.highlights']),
                                         context.create_uri(['highlights']),
-                                        image=context.create_resource_path('media', 'clipfish.png'))
+                                        image=context.create_resource_path('media', 'highlights.png'))
         highlights_item.set_fanart(self.get_fanart(context))
         result.append(highlights_item)
 
         # all videos
         all_videos_item = DirectoryItem(context.localize(self._local_map['clipfish.all-videos']),
                                         context.create_uri(['all-videos']),
-                                        image=context.create_resource_path('media', 'clipfish.png'))
+                                        image=context.create_resource_path('media', 'all_videos.png'))
         all_videos_item.set_fanart(self.get_fanart(context))
         result.append(all_videos_item)
 
