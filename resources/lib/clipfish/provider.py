@@ -274,7 +274,6 @@ class Provider(kodion.AbstractProvider):
         if video_url:
             uri_item = UriItem(video_url)
             return uri_item
-            pass
 
         return False
 
